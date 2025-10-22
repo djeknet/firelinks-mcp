@@ -77,6 +77,14 @@ class MCPHandler {
           ],
         };
       } catch (error) {
+        // Log detailed error information
+        console.error(`Error executing tool '${name}':`, {
+          message: error.message,
+          stack: error.stack,
+          args: args,
+          response: error.response?.data || null,
+        });
+
         return {
           content: [
             {

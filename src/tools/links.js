@@ -97,7 +97,7 @@ export const linksTools = [
         throw new Error(response.error);
       }
       
-      return response.data;
+      return response;
     },
   },
 
