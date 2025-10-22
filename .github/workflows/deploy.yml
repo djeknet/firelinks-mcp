@@ -1,0 +1,38 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: github
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            cd /www/wwwroot/mcp.firelinks.cc
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Install dependencies
+            npm ci --production
+            
+            # Restart service (PM2 or systemd)
+            pm2 restart firelinks-mcp || systemctl restart firelinks-mcp || echo "Service restart skipped"
+            
+            echo "Deployment completed successfully!"
+
