@@ -151,7 +151,6 @@ For connecting to other MCP-compatible clients use:
 3. `firelinks_list_links` - list all links
 4. `firelinks_update_link_url` - update link URL
 5. `firelinks_add_reserve_url` - add reserve URL
-6. `firelinks_create_cloaking_link` - create cloaking link with traffic filtering
 
 ### Statistics
 
@@ -236,63 +235,6 @@ curl -X POST https://mcp.firelinks.cc/mcp \
 - `keywords_mode` - Keyword search logic (1, 2, or 3)
 - `group_id` - Link group ID
 - `options` - Additional settings string
-
-### Create Cloaking Link
-
-```bash
-curl -X POST https://mcp.firelinks.cc/mcp \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_TOKEN" \
-  -d '{
-    "jsonrpc": "2.0",
-    "method": "tools/call",
-    "params": {
-      "name": "firelinks_create_cloaking_link",
-      "arguments": {
-        "url": "https://example.com/offer",
-        "type": "url",
-        "domain_id": 123,
-        "options[cloaking_on]": 1,
-        "options[cloaking][url]": "https://example.com/whitepage",
-        "options[cloaking][mode]": 1,
-        "options[cloaking][filters]": ["cuti", "proxy"],
-        "options[cloaking][geo_filter_status]": 2,
-        "options[cloaking][geo_filter_list]": "US,CA,GB",
-        "code": "my-cloaking-link"
-      }
-    },
-    "id": 1
-  }'
-```
-
-**Required parameters:**
-- `url` - Main offer page link
-- `type` - The type of link (use "url" for web link and web proxy)
-- `domain_id` - ID of your or Premium domain
-- `options[cloaking_on]` - 1 to activate cloaking
-- `options[cloaking][url]` - White Page URL
-- `options[cloaking][mode]` - 1 (Loading the page) or 2 (Redirect)
-- `options[cloaking][filters]` - Array of filters: cuti, ipv6, proxy, noref
-
-**Optional filtering parameters:**
-- `options[cloaking][geo_filter_status]` - Country filtering: 0 (Disabled), 1 (Disallow), 2 (Allow)
-- `options[cloaking][geo_filter_list]` - ISO country codes (US,RU,IT)
-- `options[cloaking][ip_filter_status]` - IP filtering: 0 (Disabled), 1 (Disallow), 2 (Allow)
-- `options[cloaking][ip_filter_list]` - List of IPs separated by commas
-- `options[cloaking][isp_filter_status]` - ISP filtering: 0 (Disabled), 1 (Disallow), 2 (Allow)
-- `options[cloaking][isp_filter_list]` - List of providers
-- `options[cloaking][referer_filter_status]` - Referer filtering: 0 (Disabled), 1 (Disallow), 2 (Allow)
-- `options[cloaking][referer_filter_list]` - Values in referer
-- `options[cloaking][ua_filter_status]` - User Agent filtering: 0 (Disabled), 1 (Disallow), 2 (Allow)
-- `options[cloaking][ua_filter_list]` - Values in User Agent
-- `options[cloaking][os_filters]` - Array of OS: Windows, Mac, GNU/Linux, Android, iOS, Windows Phone, BlackBerry OS
-- `options[cloaking][change_links]` - 1 to replace all links on the page (page load only)
-- `code` - Custom link code
-- `group_id` - Link group ID
-- `monetization` - Enable ad display (0 or 1)
-- `link_name` - Link name
-- `keywords` - Keywords for search
-- `keywords_mode` - Keyword search logic (1, 2, or 3)
 
 ### Get Statistics
 
