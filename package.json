@@ -1,0 +1,36 @@
+{
+  "name": "firelinks-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for Firelinks API - allows LLM clients to interact with Firelinks platform",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "firelinks-mcp": "./src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "mcp": "node src/cli.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "firelinks",
+    "api",
+    "llm"
+  ],
+  "author": "Firelinks",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+

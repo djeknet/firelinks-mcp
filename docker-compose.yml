@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelinks-mcp-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - LARAVEL_API_URL=${LARAVEL_API_URL:-https://firelinks.cc/api}
+    volumes:
+      # Volume for SSL certificates (if needed)
+      - ./ssl:/app/ssl:ro
+    networks:
+      - firelinks-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('https://mcp.firelinks.cc/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  firelinks-network:
+    external: true
+    # If the network does not exist, uncomment:
+    # driver: bridge
+
