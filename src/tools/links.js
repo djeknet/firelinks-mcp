@@ -11,32 +11,62 @@ export const linksTools = [
       properties: {
         url: {
           type: 'string',
-          description: 'URL to shorten (required field)',
+          description: 'Valid link with http or https (required field)',
         },
-        alias: {
+        type: {
           type: 'string',
-          description: 'Custom alias for the short link (optional)',
+          description: 'The type of link. Possible options: url - Web link (required field)',
+          default: 'url',
+        },
+        redirect_type: {
+          type: 'number',
+          description: 'Redirect type: 0 - 301 Moved Permanently, 1 - 302 Found, 2 - 303 See Other, 4 - META Refresh (required field)',
+          default: 0,
+        },
+        link_name: {
+          type: 'string',
+          description: 'Link name (optional)',
+        },
+        keywords: {
+          type: 'string',
+          description: 'Keywords for link search (optional)',
+        },
+        keywords_mode: {
+          type: 'number',
+          description: 'Keyword search logic: 1 - any word, 2 - half of the words, 3 - all the words from the query must be taken into account (optional)',
         },
         domain_id: {
           type: 'number',
-          description: 'Domain ID to use (optional)',
+          description: 'The ID of your domain, which can be obtained from the Domains page (optional)',
         },
-        description: {
+        sub_domain: {
           type: 'string',
-          description: 'Link description (optional)',
+          description: 'You can create a subdomain, or specify an existing one. Only latin characters and numbers (optional)',
         },
-        password: {
+        code: {
           type: 'string',
-          description: 'Password to protect the link (optional)',
+          description: 'The link code. Must be unique. The Latin alphabet, numbers and underscores are allowed (optional)',
         },
-        expired_at: {
+        group_id: {
+          type: 'number',
+          description: 'Link group ID (optional)',
+        },
+        options: {
           type: 'string',
-          description: 'Link expiration date in YYYY-MM-DD format (optional)',
+          description: 'A string with a list of additional settings (optional)',
         },
       },
-      required: ['url'],
+      required: ['url', 'type', 'redirect_type'],
     },
     async execute(apiClient, args) {
+      // Set default values if not provided
+      if (!args.type) {
+        args.type = 'url';
+      }
+      if (args.redirect_type === undefined) {
+        args.redirect_type = 0;
+      }
+      
       const response = await apiClient.get('/out/links/create', args);
       
       if (!response.success) {
@@ -73,30 +103,50 @@ export const linksTools = [
 
   {
     name: 'firelinks_list_links',
-    description: 'Get a list of all user links with filtering and pagination capabilities.',
+    description: 'Get a list of all user links with filtering and pagination capabilities. Supports filtering by code, date range, URL, clicks, title, link name, and status.',
     inputSchema: {
       type: 'object',
       properties: {
-        page: {
+        code: {
+          type: 'string',
+          description: 'Link code (optional)',
+        },
+        date_from: {
+          type: 'string',
+          description: 'Date the link was added from in Y-m-d format (e.g., 2024-01-01) (optional)',
+        },
+        date_to: {
+          type: 'string',
+          description: 'Date the link was added before in Y-m-d format (e.g., 2024-12-31) (optional)',
+        },
+        link_id: {
           type: 'number',
-          description: 'Page number for pagination (default 1)',
+          description: 'Link ID (optional)',
         },
-        per_page: {
+        url: {
+          type: 'string',
+          description: 'Search by site link (optional)',
+        },
+        clicks: {
           type: 'number',
-          description: 'Number of links per page (default 20)',
+          description: 'Click-throughs number for filtering (optional)',
         },
-        search: {
-          type: 'string',
-          description: 'Search query to filter links',
+        clicks_type: {
+          type: 'number',
+          description: 'The direction of the search by clicks: 1 - greater than or equal to, 2 - less than or equal to (optional)',
         },
-        sort: {
+        title: {
           type: 'string',
-          description: 'Field to sort by (created_at, clicks, url)',
+          description: 'Search by page title (optional)',
         },
-        order: {
+        link_name: {
           type: 'string',
-          enum: ['asc', 'desc'],
-          description: 'Sort direction (asc or desc)',
+          description: 'Search by link name (optional)',
+        },
+        status: {
+          type: 'number',
+          enum: [1, 3, 4],
+          description: 'The status of links: 1 - Active, 3 - Pause, 4 - Blocked (optional)',
         },
       },
       required: [],
@@ -159,6 +209,144 @@ export const linksTools = [
     },
     async execute(apiClient, args) {
       const response = await apiClient.get('/out/link/add/reserve', args);
+      
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+  },
+
+  {
+    name: 'firelinks_create_cloaking_link',
+    description: 'Create a cloaking link with traffic filtering. Cloaking allows showing different content to different visitors based on filters (geo, IP, ISP, User Agent, etc).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          description: 'Main offer page link (required field)',
+        },
+        type: {
+          type: 'string',
+          description: 'The type of link. Use "url" for web link and web proxy (required field)',
+          default: 'url',
+        },
+        domain_id: {
+          type: 'number',
+          description: 'Specify the ID of your or Premium domain (required field)',
+        },
+        'options[cloaking_on]': {
+          type: 'number',
+          description: '1 - Activate cloaking link (required field)',
+          default: 1,
+        },
+        'options[cloaking][url]': {
+          type: 'string',
+          description: 'White Page URL (required field)',
+        },
+        'options[cloaking][mode]': {
+          type: 'number',
+          description: '1 - Loading the page, 2 - Redirect (required field)',
+        },
+        'options[cloaking][change_links]': {
+          type: 'number',
+          description: '1 - Replace all links on the page. Page load only (optional)',
+        },
+        'options[cloaking][filters]': {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['cuti', 'ipv6', 'proxy', 'noref'],
+          },
+          description: 'Selection of filters for checking traffic: cuti - Cuti filter, ipv6 - ipv6 filter, proxy - VPN/Proxy filter, noref - Without Referrer (required field)',
+        },
+        'options[cloaking][geo_filter_status]': {
+          type: 'number',
+          description: 'Country filtering property: 0 - Disabled, 1 - Disallow, 2 - Allow (optional)',
+        },
+        'options[cloaking][geo_filter_list]': {
+          type: 'string',
+          description: 'ISO country codes for the filter in uppercase, separated by commas (US,RU,IT) (optional)',
+        },
+        'options[cloaking][ip_filter_status]': {
+          type: 'number',
+          description: 'IP filter property: 0 - Disabled, 1 - Disallow, 2 - Allow (optional)',
+        },
+        'options[cloaking][ip_filter_list]': {
+          type: 'string',
+          description: 'List of IPs separated by commas. You can specify a range in the format: 200.200.50.0/255 (optional)',
+        },
+        'options[cloaking][isp_filter_status]': {
+          type: 'number',
+          description: 'Filtering property by ISP: 0 - Disabled, 1 - Disallow, 2 - Allow (optional)',
+        },
+        'options[cloaking][isp_filter_list]': {
+          type: 'string',
+          description: 'List of providers separated by commas (optional)',
+        },
+        'options[cloaking][referer_filter_status]': {
+          type: 'number',
+          description: 'Referer filtering property: 0 - Disabled, 1 - Disallow, 2 - Allow (optional)',
+        },
+        'options[cloaking][referer_filter_list]': {
+          type: 'string',
+          description: 'Values in referer separated by commas (optional)',
+        },
+        'options[cloaking][ua_filter_status]': {
+          type: 'number',
+          description: 'Filtering property by User Agent: 0 - Disabled, 1 - Disallow, 2 - Allow (optional)',
+        },
+        'options[cloaking][ua_filter_list]': {
+          type: 'string',
+          description: 'Values in User Agent separated by commas (optional)',
+        },
+        'options[cloaking][os_filters]': {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['Windows', 'Mac', 'GNU/Linux', 'Android', 'iOS', 'Windows Phone', 'BlackBerry OS'],
+          },
+          description: 'List of OS to display White Page (optional)',
+        },
+        code: {
+          type: 'string',
+          description: 'The link code. Must be unique. The Latin alphabet, numbers and underscores are allowed (optional)',
+        },
+        group_id: {
+          type: 'number',
+          description: 'Link group ID (optional)',
+        },
+        monetization: {
+          type: 'number',
+          description: 'Enable ad display by link or not. 0 or 1 (optional)',
+        },
+        link_name: {
+          type: 'string',
+          description: 'Link name (optional)',
+        },
+        keywords: {
+          type: 'string',
+          description: 'Keywords for link search, as well as for ad selection with monetization enabled, separated by commas (optional)',
+        },
+        keywords_mode: {
+          type: 'number',
+          description: 'Keyword search logic: 1 - any word, 2 - half of the words, 3 - all the words from the query must be taken into account (optional)',
+        },
+      },
+      required: ['url', 'type', 'domain_id', 'options[cloaking_on]', 'options[cloaking][url]', 'options[cloaking][mode]', 'options[cloaking][filters]'],
+    },
+    async execute(apiClient, args) {
+      // Set default values if not provided
+      if (!args.type) {
+        args.type = 'url';
+      }
+      if (args['options[cloaking_on]'] === undefined) {
+        args['options[cloaking_on]'] = 1;
+      }
+      
+      const response = await apiClient.get('/out/links/create', args);
       
       if (!response.success) {
         throw new Error(response.error);

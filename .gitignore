@@ -5,3 +5,8 @@ node_modules/
 dist/
 coverage/
 
+# Test scripts
+test-mcp.js
+test-*.js
+create-link.js
+
